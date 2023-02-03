@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "yarn nx run-many --parallel --target=serve --projects=notification-postgres,notification-ws,notification-client"
+    "start": "yarn nx run-many --parallel --target=serve --projects=notification-postgres,notification-ws,notification-client,notification-client-2,notification-client-3 --maxParallel=10"
   },
   "private": true,
   "dependencies": {
@@ -48,7 +48,7 @@
     "@svgr/webpack": "^6.1.2",
     "@testing-library/react": "13.4.0",
     "@types/jest": "28.1.1",
-    "@types/node": "18.7.1",
+    "@types/node": "18.11.9",
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.9",
     "@types/socket.io": "^3.0.2",

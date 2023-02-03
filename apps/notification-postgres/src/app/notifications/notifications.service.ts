@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { from, Observable } from "rxjs";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { KafkaProducerService } from "../notification-kafka/producer.service";
 import { NotificationEntity } from "./models/notification.entity";
 import { NotificationsInterface, UserNotificationPayloadInterface } from "./models/notification.interface";
@@ -21,16 +21,18 @@ export class NotificationsService {
     getNotificationFor(id: string): Observable<NotificationsInterface[]> {
         return from(this.notificationRepository.find({ where: [{ user: id }] }))
     }
-    getUnAwaredNotificationsForRole(for_role: string): Observable<NotificationsInterface[]> {
-        return from(this.notificationRepository.find({ where: [{ for_role, is_aware_of: false }] }))
+    getUnAwaredNotificationsForRole(for_roles: string): Observable<NotificationsInterface[]> {
+        const roles = for_roles.split(",")
+        return from(this.notificationRepository.find({ where: [{ for_role: In(roles), is_aware_of: false }] }))
     }
 
     getUnAwaredNotificationsForUserAndRole(param: { user_roles: string, id: string }) {
+        const roles = param.user_roles.split(",")
         return from(this.notificationRepository.find({
             where: [
                 {
                     user: param.id,
-                    for_role: param.user_roles,
+                    for_role: In(roles),
                     is_aware_of: false
                 }
             ]

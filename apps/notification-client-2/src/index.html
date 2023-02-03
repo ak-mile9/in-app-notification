@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>NotificationClient2</title>
+    <base href="/" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+
+.notifier {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.bell {
+  font-size: 26px;
+  color: #000;
+  transition: 0.3s;
+}
+
+.bell:hover {
+  color: #EF476F;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  left: 24px;
+  padding: 0 5px;
+  font-size: 16px;
+  line-height: 22px;
+  height: 22px;
+  background: #EF476F;
+  color: #FFF;
+  border-radius: 11px;
+  white-space: nowrap;
+}
+
+.notifier.green .badge {
+  background: #06D6A0;
+}
+
+.notifier.green .bell:hover {
+  color: #06D6A0;
+}
+
+.notifier.new .badge {
+  animation: pulse 2s ease-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes pulse {
+  40% {
+    transform: scale3d(1, 1, 1);
+  }
+
+  50% {
+    transform: scale3d(1.3, 1.3, 1.3);
+  }
+
+  55% {
+    transform: scale3d(1, 1, 1);
+  }
+  
+  60% {
+    transform: scale3d(1.3, 1.3, 1.3);
+  }
+
+  65% {
+    transform: scale3d(1, 1, 1);
+  }
+}
+/**
+
+  Popover style
+*/
+
+.popover {
+  display: inline-block;
+  position: relative;
+}
+
+.popover__menu {
+  border-radius: 4px;
+  border-top: 2px solid #49c5b6;
+  background: #fff;
+  list-style-type: none;
+  margin: 8px 0;
+  min-width: 100%;
+  padding: 0.5rem 0;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  box-shadow: 0 2px 3px 0 rgba(63, 63, 68, 0.2);
+  transition-property: transform, opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+  transform: scale(0.9);
+  transform-origin: top left;
+  display: block;
+  opacity: 0;
+}
+.popover__menu:after {
+  bottom: 100%;
+  left: 0.5rem;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+  border-color: rgba(255, 255, 255, 0);
+  border-bottom-color: #49c5b6;
+  border-width: 7px;
+}
+
+.popover__menu-item {
+  white-space: nowrap;
+}
+.popover__menu-item button {
+  border: 0;
+  border-radius: 0;
+  width: 100%;
+  text-align: left;
+}
+.popover__menu-item button:hover, .popover__menu-item button:focus {
+  background-color: #f1f1f1;
+}
+
+.popover--active .popover__menu {
+  transform: scale(1);
+  display: block;
+  opacity: 1;
+}
+
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

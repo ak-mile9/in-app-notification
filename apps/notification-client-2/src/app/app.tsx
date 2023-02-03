@@ -6,7 +6,7 @@ import { AppWrapper } from "./components/style";
 export function App() {
   return (
     <AppWrapper>
-      <Notification userId="1" user_role={['RPROJECTA_ROLE_1']} />
+      <Notification userId="2" user_role={['RPROJECTA_ROLE_2']} />
 
 
     </AppWrapper>
