@@ -14,4 +14,4 @@ export enum Roles {
     RPROJECTA_ROLE_4 = "RPROJECTA_ROLE_4",
 }
 
-export interface UserNotificationPayloadInterface { user: string, for_role: string }
+export interface UserNotificationPayloadInterface { user: string, for_role: string[] }
