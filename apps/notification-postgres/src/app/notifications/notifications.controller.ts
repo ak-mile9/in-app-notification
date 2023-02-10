@@ -18,9 +18,10 @@ export class NotificationsController {
         return this.notificationService.getNotificationFor(param.id.toString());
     }
 
-    @Get('notifications/role/:user_role')
-    public getUnAwaredNotificationsForRole(@Param() param: { user_role: string }) {
-        return this.notificationService.getUnAwaredNotificationsForRole(param.user_role)
+    @Get('notifications/:user_id/role/:user_role')
+    public getUnAwaredNotificationsForRole(@Param() param: { user_id: string, user_role: string }) {
+        console.log('param', param);
+        return this.notificationService.getUnAwaredNotificationsForRole(param.user_role, param.user_id)
     }
 
     @Get('notifications/user/:id/roles/:user_roles')

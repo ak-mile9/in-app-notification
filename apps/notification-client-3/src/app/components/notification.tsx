@@ -23,7 +23,7 @@ export const Notification: React.FC<{ userId: string; user_role: string[] }> = (
     const fetchNotifications = () => {
 
         //  fetch(`${BASE_URL}/notifications/user/${userId}/roles/${user_role}`)
-        fetch(`${BASE_URL}/notifications/role/${user_role}`)
+        fetch(`${BASE_URL}/notifications/${userId}/role/${user_role}`)
             .then(response => response.json())
             .then(data => {
                 setUnreadedNotificaion([...unReadedNotification, ...data])

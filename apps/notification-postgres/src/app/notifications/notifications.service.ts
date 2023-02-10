@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { InjectRepository, InjectEntityManager } from "@nestjs/typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
 import { from, Observable } from "rxjs";
 import { In, Repository } from "typeorm";
 import { KafkaProducerService } from "../notification-kafka/producer.service";
@@ -16,7 +16,9 @@ export class NotificationsService {
         @InjectRepository(ReadedNotificationEntity)
         private readonly readedNotificationRepository: Repository<ReadedNotificationEntity>,
 
-        private readonly kafkaProducer: KafkaProducerService) { }
+        private readonly kafkaProducer: KafkaProducerService) {
+
+    }
 
 
     getNotifications(): Observable<NotificationsInterface[]> {
@@ -26,13 +28,32 @@ export class NotificationsService {
     getNotificationFor(id: string): Observable<NotificationsInterface[]> {
         return from(this.notificationRepository.find({ where: [{ user: id }] }))
     }
-    async getUnAwaredNotificationsForRole(for_roles: string): Promise<Observable<NotificationsInterface[]>> {
+    async getUnAwaredNotificationsForRole(for_roles: string, user: string): Promise<Observable<NotificationsInterface[]>> {
+
         const roles = for_roles.split(",");
-        const user = 1;
-        const readedNotifications = this.readedNotificationRepository.createQueryBuilder('a').select('notification_id').getSql();
-        const deltaNotificaitons = await this.notificationRepository.createQueryBuilder('d').where("d.id not IN (" + readedNotifications + ")").execute()
-        //console.log('readedNotifications', deltaNotificaitons)
-        return deltaNotificaitons
+
+        const readedNotifications = await this.readedNotificationRepository.find({
+            where: [{
+                user_id: user,
+            }]
+        })
+
+
+        const readedNotificationsId = readedNotifications.map(n => n.notification_id);
+        console.log('readedNotificationsId', readedNotificationsId)
+        // const deltaNotificaitons = await this.notificationRepository.createQueryBuilder('d')
+        //     .where("d.for_role in (:...roles)").setParameter("roles", roles)
+        //     .andWhere(`d.id not IN (:...readedNotification)`)
+        //     .setParameter("readedNotification", [...readedNotificationsId]).execute()
+        // console.log('deltaNotificaitons', deltaNotificaitons)
+        const allNotifications = await this.notificationRepository.find({
+            where: {
+                for_role: In(roles)
+            }
+        })
+        const deltaNotifications = allNotifications.filter(notificaiton => !readedNotificationsId.includes(notificaiton.id)) || []
+        return from([deltaNotifications])
+
         //return from(this.notificationRepository.find({ where: [{ for_role: In(roles), is_aware_of: false }] }))
     }
 
@@ -58,11 +79,7 @@ export class NotificationsService {
 
     async setNotificationAsAwared(payload: UserNotificationPayloadInterface) {
         const { for_role, user } = payload;
-        console.log({
-            user,
-            for_role: In(for_role),
-            is_aware_of: false
-        })
+
         const unReadedNotificationsForUser = await this.notificationRepository.find({
             where: [{
                 user,
@@ -79,7 +96,8 @@ export class NotificationsService {
         const updateReadedNotificaiton = await this.readedNotificationRepository.createQueryBuilder()
             .insert().into(ReadedNotificationEntity)
             .values([...toBeInserted]).execute();
-        console.log('updateReadedNotificaiton', updateReadedNotificaiton)
+
+
         // const update = await this.notificationRepository
         //     .createQueryBuilder()
         //     .update(NotificationEntity)
