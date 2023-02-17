@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
-import { NotificationsInterface, UserNotificationPayloadInterface } from "./models/notification.interface";
+import { NotificationsInterface, NotificationPayloadInterface, UserNotificationPayloadInterface } from "./models/notification.interface";
 import { NotificationsService } from "./notifications.service";
 
 
@@ -13,25 +13,32 @@ export class NotificationsController {
         return this.notificationService.getNotifications()
     }
 
-    @Get('notification/user/:id')
-    public getNotificationFor(@Param() param: { id: string }) {
-        return this.notificationService.getNotificationFor(param.id.toString());
+    @Get('notification/:id')
+    public getNotificationFor(@Param() param: { id: number }) {
+        return this.notificationService.getNotificationFor(param.id);
     }
+    /**
+     * 
+     * @param param t
+     * @returns 
+     * this is confusing depricate this asap
+     */
+    // @Get('notifications/:user_id/role/:user_role')
+    // public getUnAwaredNotificationsForRole(@Param() param: { user_id: string, user_role: string }) {
+    //     console.log('param', param);
+    //     return this.notificationService.getUnAwaredNotificationsForRole(param.user_role, param.user_id)
+    // }
 
-    @Get('notifications/:user_id/role/:user_role')
-    public getUnAwaredNotificationsForRole(@Param() param: { user_id: string, user_role: string }) {
-        console.log('param', param);
-        return this.notificationService.getUnAwaredNotificationsForRole(param.user_role, param.user_id)
-    }
-
-    @Get('notifications/user/:id/roles/:user_roles')
-    public getUnAwaredNotificationsForUserAndRole(@Param() param: { user_roles: string, id: string }) {
-        return this.notificationService.getUnAwaredNotificationsForUserAndRole(param)
+    @Get('notifications/user/:userid/roles/:user_roles')
+    public async getUnAwaredNotificationsForUserAndRole(@Param() param: { user_roles: string, userid: string }) {
+        const data = await this.notificationService.getUnAwaredNotificationsForUserAndRole(param)
+        console.log('dataController', data)
+        return data;
     }
 
     @Post('notification')
-    create(@Body() notification: NotificationsInterface) {
-        console.table(notification)
+    create(@Body() notification: NotificationPayloadInterface) {
+
         return this.notificationService.setNotification(notification);
     }
 

@@ -22,10 +22,11 @@ export const Notification: React.FC<{ userId: string; user_role: string[] }> = (
     const [socketId, setSocketId] = useState<string | null>(null);
     const fetchNotifications = () => {
 
-        //  fetch(`${BASE_URL}/notifications/user/${userId}/roles/${user_role}`)
-        fetch(`${BASE_URL}/notifications/${userId}/role/${user_role}`)
+        fetch(`${BASE_URL}/notifications/user/${userId}/roles/${user_role}`)
+            //fetch(`${BASE_URL}/notifications/${userId}/role/${user_role}`)
             .then(response => response.json())
             .then(data => {
+                console.log('data', data)
                 setUnreadedNotificaion([...unReadedNotification, ...data])
             });
     }

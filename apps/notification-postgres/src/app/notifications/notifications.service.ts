@@ -4,7 +4,7 @@ import { from, Observable } from "rxjs";
 import { In, Repository } from "typeorm";
 import { KafkaProducerService } from "../notification-kafka/producer.service";
 import { NotificationEntity } from "./models/notification.entity";
-import { NotificationsInterface, UserNotificationPayloadInterface } from "./models/notification.interface";
+import { NotificationsInterface, NotificationPayloadInterface, UserNotificationPayloadInterface } from "./models/notification.interface";
 import { ReadedNotificationEntity } from "./models/readed-notification.entity";
 
 @Injectable()
@@ -21,89 +21,120 @@ export class NotificationsService {
     }
 
 
-    getNotifications(): Observable<NotificationsInterface[]> {
+    getNotifications(): Observable<NotificationEntity[]> {
         return from(this.notificationRepository.find())
     }
 
-    getNotificationFor(id: string): Observable<NotificationsInterface[]> {
-        return from(this.notificationRepository.find({ where: [{ user: id }] }))
+    getNotificationFor(id: number): Observable<NotificationEntity[]> {
+        return from(this.notificationRepository.find({ where: [{ id }] }))
     }
-    async getUnAwaredNotificationsForRole(for_roles: string, user: string): Promise<Observable<NotificationsInterface[]>> {
 
-        const roles = for_roles.split(",");
+    // async getUnAwaredNotificationsForRole(for_roles: string, user: string): Promise<Observable<NotificationsInterface[]>> {
 
-        const readedNotifications = await this.readedNotificationRepository.find({
-            where: [{
-                user_id: user,
-            }]
-        })
+    //     const roles = for_roles.split(",");
+
+    //     const readedNotifications = await this.readedNotificationRepository.find({
+    //         where: [{
+    //             user_id: user,
+    //         }]
+    //     })
 
 
-        const readedNotificationsId = readedNotifications.map(n => n.notification_id);
-        console.log('readedNotificationsId', readedNotificationsId)
-        // const deltaNotificaitons = await this.notificationRepository.createQueryBuilder('d')
-        //     .where("d.for_role in (:...roles)").setParameter("roles", roles)
-        //     .andWhere(`d.id not IN (:...readedNotification)`)
-        //     .setParameter("readedNotification", [...readedNotificationsId]).execute()
-        // console.log('deltaNotificaitons', deltaNotificaitons)
+    //     const readedNotificationsId = readedNotifications.map(n => n.notification_id);
+    //     console.log('readedNotificationsId', readedNotificationsId)
+
+    //     const allNotifications = await this.notificationRepository.find()
+    //     const deltaNotifications = allNotifications.filter(notificaiton => !readedNotificationsId.includes(notificaiton.id)) || []
+    //     return from([deltaNotifications])
+
+    //     //return from(this.notificationRepository.find({ where: [{ for_role: In(roles), is_aware_of: false }] }))
+    // }
+
+    async getUnAwaredNotificationsForUserAndRole(param: { user_roles: string, userid: string }) {
+        const { userid, user_roles } = param;
+        const roles = user_roles.split(",")
         const allNotifications = await this.notificationRepository.find({
-            where: {
-                for_role: In(roles)
-            }
-        })
-        const deltaNotifications = allNotifications.filter(notificaiton => !readedNotificationsId.includes(notificaiton.id)) || []
-        return from([deltaNotifications])
-
-        //return from(this.notificationRepository.find({ where: [{ for_role: In(roles), is_aware_of: false }] }))
-    }
-
-    getUnAwaredNotificationsForUserAndRole(param: { user_roles: string, id: string }) {
-        const roles = param.user_roles.split(",")
-
-
-        return from(this.notificationRepository.find({
             where: [
                 {
-                    user: param.id,
-                    for_role: In(roles),
-                    is_aware_of: false
+                    for_role: In(roles)
                 }
             ]
-        }))
-    }
-    setNotification(notification: NotificationsInterface): Observable<NotificationsInterface> {
-        this.kafkaProducer.produce({ topic: 'create-notification', messages: [{ value: JSON.stringify(notification) }] })
+        });
+        const readedNotificationByThisUser = await this.readedNotificationRepository.find({
+            where: [{
+                user_id: userid
+            }]
+        })
+        const readedNotificationId = readedNotificationByThisUser.map(notificaiton => notificaiton.notification_id);
 
-        return from(this.notificationRepository.save(notification))
+        const unreadedNotifications = allNotifications.filter(notificaion => !readedNotificationId.includes(notificaion.id) && roles.includes(notificaion.for_role))
+        console.log('data Service', unreadedNotifications)
+        return unreadedNotifications
+    }
+    async setNotification(notification: NotificationPayloadInterface) {
+        const toProduce = notification.for_roles.map(role => {
+            return {
+                ...notification,
+                for_role: role
+            }
+        })
+
+        this.kafkaProducer.produce({
+            topic: 'create-notification', messages: [...toProduce.map(produce => {
+                return { value: JSON.stringify(produce) }
+            })]
+        })
+        const notificationToSave: NotificationsInterface[] = toProduce.map(notificaion => {
+            delete notificaion.for_roles;
+            return notificaion;
+        })
+        const saveNotifications = await this.notificationRepository
+            .createQueryBuilder().insert()
+            .into(NotificationEntity)
+            .values([...notificationToSave]).execute()
+        if (saveNotifications.generatedMaps.length > 0) {
+            return {
+                message: 'saved sccessfully'
+            }
+        }
+        return {
+            message: 'something went'
+        }
     }
 
     async setNotificationAsAwared(payload: UserNotificationPayloadInterface) {
         const { for_role, user } = payload;
-
-        const unReadedNotificationsForUser = await this.notificationRepository.find({
+        /**
+         * This is about user having features
+         * eg. if any user were assigned to any role/feature and now it is removed.
+         * then he/she will no more receive any notification to  the role which he/she was part of
+         */
+        const allNotifications = await this.notificationRepository.find({
             where: [{
-                user,
-                for_role: In(for_role),
-                is_aware_of: false
+                for_role: In(for_role)
             }]
         })
-        const toBeInserted = unReadedNotificationsForUser.map(unreaded => {
-            return {
-                user_id: unreaded.user,
-                notification_id: unreaded.id
+        const readedNotifications = await this.readedNotificationRepository.find({
+            where: [{
+                user_id: user
+            }]
+        })
+
+        const readedNotificationId = readedNotifications.map(readedNotification => readedNotification.notification_id);
+        const allNotificationsWhichAreNotReadedForThisUser = []
+        allNotifications.forEach(unreaded => {
+            if (!readedNotificationId.includes(unreaded.id)) {
+                allNotificationsWhichAreNotReadedForThisUser.push({
+                    notification_id: unreaded.id,
+                    user_id: user
+                })
             }
         })
+        //console.log('allNotificationsWhichAreNotReadedForThisUser', allNotificationsWhichAreNotReadedForThisUser)
         const updateReadedNotificaiton = await this.readedNotificationRepository.createQueryBuilder()
             .insert().into(ReadedNotificationEntity)
-            .values([...toBeInserted]).execute();
+            .values([...allNotificationsWhichAreNotReadedForThisUser]).execute();
 
-
-        // const update = await this.notificationRepository
-        //     .createQueryBuilder()
-        //     .update(NotificationEntity)
-        //     .set({ is_aware_of: true })
-        //     .where('user = :user', { user: user.toString() })
-        //     .andWhere("for_role = :for_role", { for_role: for_role }).execute();
         if (updateReadedNotificaiton.generatedMaps.length > 0) {
             return {
                 message: 'Updated sccessfully'

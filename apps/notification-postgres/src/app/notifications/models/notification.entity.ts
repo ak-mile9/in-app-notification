@@ -10,9 +10,8 @@ export class NotificationEntity {
     @Column()
     title: string
 
-    @Column()
-    user: string
-
+    @Column({ default: null })
+    message: string;
 
     @Column({ default: '' })
     for_role: string;
