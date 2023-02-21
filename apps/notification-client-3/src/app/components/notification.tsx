@@ -91,7 +91,10 @@ export const Notification: React.FC<{ userId: string; user_role: string[] }> = (
 
     return (
         <>
-            <div style={{ "border": "5px solid green", "height": "50px" }}>userId:{userId}   user_role: {user_role.join(',')}</div>
+            <div style={{ "border": "5px solid green" }}>
+                <p>userId:<strong>{userId}</strong></p>
+                <p>   user_role: <strong>{user_role.join(", ")}</strong></p>
+            </div>
             <HealthStatus isConnected={isConnected} newCount={unReadedNotification.length} onNotificationChecked={onNotificaitonCheckedClickHandler} />
 
             <EventRecords notifications={unReadedNotification} />

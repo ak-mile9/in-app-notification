@@ -12,8 +12,8 @@ type EventRecordsTypeInterface = {
 
 export const EventRecords: React.FC<EventRecordsTypeInterface> = ({ notifications }) => {
     return (
-        <div>
-            Existing Records of Notification
+        <div style={{ "display": "none" }}>
+            Existing Records of unreaded Notification
             <Grid>
                 <StyledTable>
                     <thead>

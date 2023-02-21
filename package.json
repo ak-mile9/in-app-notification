@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "yarn nx run-many --parallel --target=serve --projects=notification-postgres,notification-ws,notification-client,notification-client-2,notification-client-3 --maxParallel=10"
+    "start": "yarn nx run-many --parallel --target=serve --projects=notification-postgres,notification-ws,notification-client,notification-client-2,notification-client-3,producer-client --maxParallel=10"
   },
   "private": true,
   "dependencies": {
